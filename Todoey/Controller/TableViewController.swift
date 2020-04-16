@@ -9,24 +9,15 @@
 import UIKit
 
 class TableViewController: UITableViewController {
-
+    
     var itemArray = [Item]()
     let defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem = Item()
-        newItem.title = "Find Mike"
-        itemArray.append(newItem)
-        
-        let newItem2 = Item()
-        newItem2.title = "Find Mike"
-        itemArray.append(newItem2)
-        
-        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-            itemArray = items
-        }
+        loadData()
         
     }
     
@@ -49,12 +40,13 @@ class TableViewController: UITableViewController {
         
         return cell
     }
-
+    
     //MARK - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-       
+        
         itemArray[indexPath.row].check = !itemArray[indexPath.row].check
+        saveData()
         
         tableView.reloadData()
         
@@ -64,7 +56,7 @@ class TableViewController: UITableViewController {
     //MARK - Add Item
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-    
+        
         var textField = UITextField()
         
         let alert = UIAlertController(title: "Add New Todo Item", message: "", preferredStyle: .alert)
@@ -73,11 +65,12 @@ class TableViewController: UITableViewController {
             
             let newItem = Item()
             newItem.title = textField.text!
-          
-            self.itemArray.append(newItem)
-            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
             
-            self.tableView.reloadData()
+            self.itemArray.append(newItem)
+            self.saveData()
+            //            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
+            //
+            //            self.tableView.reloadData()
         }
         
         alert.addTextField { (alertTextField) in
@@ -89,6 +82,33 @@ class TableViewController: UITableViewController {
         
         present(alert, animated: true, completion: nil)
         
+    }
+    
+    //MARK - Model Manipulation Methods
+    
+    func saveData(){
+        let encoder = PropertyListEncoder()
+        
+        do{
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        }catch{
+            print("Error encoding data, \(error)")
+        }
+        
+        tableView.reloadData()
+    }
+    
+    func loadData(){
+        
+        if let data = try? Data(contentsOf: dataFilePath!){
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            }catch {
+                print(error)
+            }
+        }
     }
 }
 
