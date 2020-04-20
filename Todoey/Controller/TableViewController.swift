@@ -7,21 +7,23 @@
 //
 
 import UIKit
+import CoreData
 
 class TableViewController: UITableViewController {
     
     var itemArray = [Item]()
     let defaults = UserDefaults.standard
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+                
         loadData()
         
     }
     
-    //MARK - TableView Datasource methods
+    //MARK:- TableView Datasource methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
     }
@@ -30,8 +32,7 @@ class TableViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
         cell.textLabel?.text = itemArray[indexPath.row].title
-        
-        if itemArray[indexPath.row].check == true {
+        if itemArray[indexPath.row].done == true {
             cell.accessoryType = .checkmark
         }
         else {
@@ -45,7 +46,9 @@ class TableViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        itemArray[indexPath.row].check = !itemArray[indexPath.row].check
+        //        context.delete(itemArray[indexPath.row])
+        //        itemArray.remove(at: indexPath.row)
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         saveData()
         
         tableView.reloadData()
@@ -63,9 +66,9 @@ class TableViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             
-            let newItem = Item()
+            let newItem = Item(context: self.context)
             newItem.title = textField.text!
-            
+            newItem.done = false 
             self.itemArray.append(newItem)
             self.saveData()
             //            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
@@ -87,28 +90,39 @@ class TableViewController: UITableViewController {
     //MARK - Model Manipulation Methods
     
     func saveData(){
-        let encoder = PropertyListEncoder()
         
         do{
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try context.save()
         }catch{
-            print("Error encoding data, \(error)")
+            print("Error saving data: \(error)")
         }
         
         tableView.reloadData()
     }
     
-    func loadData(){
+    func loadData(with request: NSFetchRequest<Item> = Item.fetchRequest()){
         
-        if let data = try? Data(contentsOf: dataFilePath!){
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            }catch {
-                print(error)
-            }
+//        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try context.fetch(request)
+        } catch {
+            print("Error fetching data: \(error)")
         }
+        
+        tableView.reloadData()
+    }
+}
+
+//MARK:- Search bar methods
+
+extension TableViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        request.predicate =  NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+     
+        loadData(with: request)
     }
 }
 
