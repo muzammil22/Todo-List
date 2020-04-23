@@ -61,6 +61,20 @@
         return cell
     }
     
+    //MARK:- TableView Delegate Method
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! TableViewController
+        
+        if let indexPath = tableView.indexPathForSelectedRow{
+            destinationVC.selectdCategory = categoryArray[indexPath.row]
+        }
+    
+    }
     //MARK:- Model Manipulation Methods
     
     func saveData(){
