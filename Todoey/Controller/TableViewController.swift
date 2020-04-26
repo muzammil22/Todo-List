@@ -84,6 +84,7 @@ class TableViewController: UITableViewController {
                     try self.realm.write {
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.dateCreated = Date()
                         currentCategory.items.append(newItem)
                     }
                 }catch {
@@ -123,7 +124,7 @@ class TableViewController: UITableViewController {
     
     func loadData(){
         
-        todoItems = selectdCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        todoItems = selectdCategory?.items.sorted(byKeyPath: "dateCreated", ascending: false)
         
         tableView.reloadData()
     }
