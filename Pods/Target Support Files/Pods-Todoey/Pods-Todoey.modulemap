@@ -1,4 +1,4 @@
-framework module Pods_Todoey {
+module Pods_Todoey {
   umbrella header "Pods-Todoey-umbrella.h"
 
   export *
