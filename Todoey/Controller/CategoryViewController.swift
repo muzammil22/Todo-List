@@ -28,6 +28,16 @@
         
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        guard let navBar = navigationController?.navigationBar else {
+            fatalError("Navigation controller doesnot exist.")
+        }
+    
+        navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: ContrastColorOf(UIColor(hexString: "1D9BF6")!, returnFlat: true)]
+        navBar.backgroundColor = UIColor(hexString: "1D9BF6")
+//        navBar.barTintColor = UIColor.green
+    }
+    
     //MARK:- Add Item
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -65,9 +75,15 @@
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added"
         
-        cell.backgroundColor = UIColor(hexString: categoryArray?[indexPath.row].color ?? "#ffffff")
+        if let categoryColor = categoryArray?[indexPath.row].color {
+            cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added"
+            cell.textLabel?.textColor = ContrastColorOf(UIColor(hexString: categoryColor)!, returnFlat: true)
+            
+            cell.backgroundColor = UIColor(hexString: categoryColor)
+        }
+        
+        
         
         return cell
     }

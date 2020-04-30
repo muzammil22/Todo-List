@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class TableViewController: SwipeTableViewController {
     
@@ -16,6 +17,7 @@ class TableViewController: SwipeTableViewController {
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     let realm = try! Realm()
     
+    @IBOutlet weak var searchBar: UISearchBar!
     var selectdCategory: Category? {
         didSet{
             loadData()
@@ -26,9 +28,32 @@ class TableViewController: SwipeTableViewController {
         super.viewDidLoad()
         
         //        loadData()
-         tableView.rowHeight = 80.0
+        tableView.rowHeight = 80.0
+        tableView.separatorStyle = .none
         
-        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        if let chex = selectdCategory?.color {
+            title = selectdCategory!.name
+            
+            guard let navBar = navigationController?.navigationBar else {
+                fatalError("Navigation controller doesnot exist.")
+            }
+            
+            if let navBarColor = UIColor(hexString: chex) {
+                navBar.backgroundColor = navBarColor
+                 navBar.barTintColor = navBarColor
+                searchBar.barTintColor = navBarColor
+                
+                navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+                
+                navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: ContrastColorOf(navBarColor, returnFlat: true)]
+            }
+            
+           
+            
+        }
     }
     
     //MARK:- TableView Datasource methods
@@ -42,6 +67,14 @@ class TableViewController: SwipeTableViewController {
         
         if let item = todoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
+            
+            let percentage = CGFloat(indexPath.row)/CGFloat(todoItems!.count)
+
+            print(selectdCategory?.color)
+            let color = UIColor(hexString: selectdCategory!.color)?.darken(byPercentage: percentage) ?? UIColor.white
+            
+            cell.backgroundColor = color
+            cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
             
             cell.accessoryType = item.done ? .checkmark : .none
         }
@@ -127,7 +160,7 @@ class TableViewController: SwipeTableViewController {
     
     func loadData(){
         
-        todoItems = selectdCategory?.items.sorted(byKeyPath: "dateCreated", ascending: false)
+        todoItems = selectdCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
         
         tableView.reloadData()
     }
